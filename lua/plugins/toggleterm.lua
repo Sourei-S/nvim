@@ -3,7 +3,9 @@ return {
   "akinsho/toggleterm.nvim",
   version = "*",
   keys = {
-    { "<leader>t", "<cmd>ToggleTerm<cr>", desc = "ターミナルを開閉" },
+    -- 右辺なしのエントリは遅延読み込みのトリガーとしてだけ働き、
+    -- 読み込み後は本体の open_mapping (<C-\>) がノーマル/ターミナル両モードの開閉を担う
+    { [[<C-\>]], mode = { "n", "t" }, desc = "ターミナルを開閉" },
   },
   opts = {
     direction = "float",
