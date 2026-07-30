@@ -12,6 +12,16 @@ return {
   opts = {
     -- netrw を置き換え、`nvim <dir>` でも oil が開くようにする
     default_file_explorer = true,
+    -- 既定のキーマップは維持され、ここに書いたものだけ追加・上書きされる
+    keymaps = {
+      ["<leader>t"] = {
+        callback = function()
+          require("config.oil-templates").pick()
+        end,
+        mode = "n",
+        desc = "テンプレートからファイル構成を挿入",
+      },
+    },
     view_options = {
       -- ドットファイルも表示する
       show_hidden = true,
