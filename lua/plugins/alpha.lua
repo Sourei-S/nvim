@@ -41,6 +41,36 @@ return {
   config = function(_, opts)
     require("alpha").setup(opts)
 
+    -- 最後のバッファを閉じたとき、空バッファの代わりにダッシュボードへ戻る
+    vim.api.nvim_create_autocmd("BufDelete", {
+      callback = function(args)
+        -- 削除中のバッファを除き、表示する意味のあるバッファが残っているか数える
+        -- (無名でも未保存の変更があるバッファは「残っている」扱いにして隠さない)
+        local remaining = vim.tbl_filter(function(buf)
+          return buf ~= args.buf
+            and vim.bo[buf].buflisted
+            and (vim.api.nvim_buf_get_name(buf) ~= "" or vim.bo[buf].modified)
+        end, vim.api.nvim_list_bufs())
+
+        if #remaining == 0 then
+          -- bdelete完了後でないとウィンドウの差し替えができないため遅延実行する
+          vim.schedule(function()
+            -- 削除後に表示されているのが「空の無名通常バッファ」のときだけダッシュボードへ戻す。
+            -- oilなどのunlistedな特殊バッファへ切り替えた直後もBufDeleteが発火するため、
+            -- filetypeだけの判定ではそれらのウィンドウを乗っ取ってしまう
+            if
+              vim.bo.buftype == ""
+              and vim.bo.filetype == ""
+              and vim.api.nvim_buf_get_name(0) == ""
+              and not vim.bo.modified
+            then
+              require("alpha").start(false)
+            end
+          end)
+        end
+      end,
+    })
+
     -- 起動完了後、プラグイン数と起動時間をフッターに表示する
     vim.api.nvim_create_autocmd("User", {
       pattern = "LazyVimStarted",
