@@ -33,6 +33,7 @@ init.lua                    -- エディタ基本設定・キーマップ・自�
 keybindings.md              -- キーバインド一覧(oil のデフォルトキー含む)
 lua/config/lazy.lua         -- lazy.nvim のブートストラップ
 lua/config/open-external.lua -- Office/PDF/画像等を OS 既定アプリで開く独自スクリプト
+lua/config/oil-templates.lua -- oil バッファへのテンプレート一括挿入(定型のファイル構成を定義)
 lua/plugins/*.lua           -- プラグイン設定(1プラグイン1ファイル)
 docs/superpowers/specs/     -- 変更時の設計メモ
 ```
@@ -94,8 +95,8 @@ docs/superpowers/specs/     -- 変更時の設計メモ
 
 | プラグイン | 役割 |
 |---|---|
-| [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | あいまい検索(ファイル名・全文・バッファ等)。fzf-native で高速化 |
-| [oil.nvim](https://github.com/stevearc/oil.nvim) | バッファ型ファイラ。ディレクトリをバッファとして編集し、ファイル操作できる。ドットファイル常時表示 |
+| [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | あいまい検索(ファイル名・全文・バッファ等)。fzf-native で高速化。ui-select 拡張で `vim.ui.select`(テンプレート選択など)もドロップダウン化 |
+| [oil.nvim](https://github.com/stevearc/oil.nvim) | バッファ型ファイラ。ディレクトリをバッファとして編集し、ファイル操作できる。ドットファイル常時表示。`<Space>t` でテンプレート一括挿入(下記の独自スクリプト) |
 
 ### Git
 
@@ -129,9 +130,40 @@ docs/superpowers/specs/     -- 変更時の設計メモ
 | `]h` / `[h` / `<Space>hs` `hr` `hp` `hb` | hunk 移動 / ステージ・取り消し・プレビュー・blame (gitsigns) |
 | `<Space>cf` | コードを整形 (conform) |
 | `Ctrl+y` / `Ctrl+n` `Ctrl+p` / `Ctrl+Space` / `Tab` | 補完の確定 / 候補移動 / 手動表示 / スニペット内移動 (blink.cmp) |
-| `<Space>t` / `Ctrl+\` | フローティングターミナル |
+| `Ctrl+\` | フローティングターミナル |
+| `<Space>t` | テンプレートからファイル構成を挿入 (oil バッファ内のみ) |
 | `<Space>mp` / `<Space>mr` | ブラウザプレビュー / バッファ内装飾 (markdown) |
 | `jj` | インサートモードを抜ける |
+
+## 独自スクリプト: oil テンプレート一括挿入
+
+`lua/config/oil-templates.lua`。oil のバッファで `<Space>t` を押すと、あらかじめ定義したファイル構成(テンプレート)を Telescope のドロップダウンから選択でき、カーソル行の下に一括挿入される。そのまま `:w` すればディレクトリ・ファイルがまとめて作成される(既存の名前は挿入時にスキップ)。
+
+使い方:
+
+1. oil でテンプレートを展開したいディレクトリを開く
+2. `<Space>t` → 一覧から選択(`j`/`k` で移動、`Enter` で確定)
+3. `:w` で一括作成
+
+### テンプレートの追加方法
+
+`lua/config/oil-templates.lua` の `M.templates` に1項目追加するだけで、選択肢に自動で並ぶ。
+
+```lua
+M.templates = {
+  {
+    name = "agentプロジェクト構成",  -- 選択肢に表示される名前
+    lines = {                        -- 挿入される行(末尾 / でディレクトリ)
+      ".agents/",
+      ".claude/",
+      ".codex/",
+      "docs/",
+      ".gitignore",
+    },
+  },
+  -- ここに { name = "...", lines = { ... } } を追加する
+}
+```
 
 ## 独自スクリプト: 外部アプリでのファイルオープン
 
