@@ -6,8 +6,19 @@ return {
     "nvim-lua/plenary.nvim",
     -- ソートをC実装に置き換えて高速化する(要: make, cc)
     { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+    -- vim.ui.select(テンプレート選択など)をtelescopeのドロップダウンにする
+    "nvim-telescope/telescope-ui-select.nvim",
   },
   cmd = "Telescope",
+  -- 遅延ロードでもvim.ui.selectが最初から効くよう、初回呼び出し時に
+  -- telescope本体をロードしてから本物のvim.ui.select(ui-select拡張が
+  -- 差し替えたもの)へ委譲する
+  init = function()
+    vim.ui.select = function(...)
+      require("lazy").load({ plugins = { "telescope.nvim" } })
+      return vim.ui.select(...)
+    end
+  end,
   keys = {
     { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "ファイル名で検索" },
     { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "ファイル内の文字列を検索(要: ripgrep)" },
@@ -18,7 +29,11 @@ return {
   opts = {},
   config = function(_, opts)
     local telescope = require("telescope")
+    opts.extensions = {
+      ["ui-select"] = require("telescope.themes").get_dropdown(),
+    }
     telescope.setup(opts)
     telescope.load_extension("fzf")
+    telescope.load_extension("ui-select")
   end,
 }
