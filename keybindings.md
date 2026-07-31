@@ -20,7 +20,7 @@
 | `<Space>mp` | Normal (markdownのみ) | マークダウンプレビューをブラウザで開閉 | `lua/plugins/markdown-preview.lua` |
 | `<Space>mr` | Normal (markdownのみ) | バッファ内のマークダウン装飾表示を切り替え | `lua/plugins/render-markdown.lua` |
 | `<Space>gg` | Normal | LazyGit を開く | `lua/plugins/lazygit.lua` |
-| `<Space>t` | Normal | フローティングターミナルを開閉 | `lua/plugins/toggleterm.lua` |
+| `<Space>t` | Normal (oilバッファのみ) | テンプレートからファイル構成を挿入(選択後 :w で一括作成) | `lua/plugins/oil.lua` |
 | `Ctrl+\` | Normal / Terminal | フローティングターミナルを開閉(ターミナル内からも閉じられる) | `lua/plugins/toggleterm.lua` |
 | `<Space>cf` | Normal / Visual | コードを整形(該当フォーマッタが無い言語はLSPの整形機能にフォールバック) | `lua/plugins/conform.lua` |
 | `]h` | Normal | 次の変更箇所(hunk)へ移動 | `lua/plugins/gitsigns.lua` |

@@ -3,4 +3,5 @@
 .claude
 .agents
 docs
+tests
 nvim.log
