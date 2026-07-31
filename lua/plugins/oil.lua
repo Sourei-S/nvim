@@ -12,6 +12,10 @@ return {
   opts = {
     -- netrw を置き換え、`nvim <dir>` でも oil が開くようにする
     default_file_explorer = true,
+    -- 削除を含まない単純な編集(作成5件以下・移動/コピー各1件以下)は
+    -- :w 時の確認フロートを出さず即実行する。確認フロートはy/oでしか
+    -- 確定できずEnterが効かないため、テンプレート一括作成の流れを妨げる
+    skip_confirm_for_simple_edits = true,
     -- 既定のキーマップは維持され、ここに書いたものだけ追加・上書きされる
     keymaps = {
       ["<leader>t"] = {
