@@ -168,3 +168,21 @@ M.templates = {
 ## 独自スクリプト: 外部アプリでのファイルオープン
 
 `lua/config/open-external.lua`。Office 文書・PDF・画像・音声・動画などを nvim で開こうとすると、バッファに読み込む代わりに OS 既定のアプリ(WSL では explorer.exe 経由で Windows 側の関連付けアプリ)で開く。対象拡張子はファイル冒頭の `extensions` で増減できる。
+
+## 画像プレビュー (snacks.image)
+
+WezTerm上でnvim内に画像を表示する。ImageMagickが必要（`sudo apt-get install imagemagick`）。
+画像を`:e`で直接開いた場合は従来どおりOS既定アプリで開く（open-external.lua）。
+
+- **Markdown**: `![](path.png)` の行にカーソルを乗せるとフロートで画像を表示
+  （WezTermはunicode placeholders未対応のためインライン埋め込みは不可。kitty/ghosttyなら自動でインライン表示になる）
+- **oilの`<C-p>`**: カーソル下が画像ならフロートで表示（もう一度押すと閉じる）。非画像は従来のプレビュー
+- **telescope**: プレビューウィンドウに画像を表示
+
+### 手動確認手順
+
+1. `:checkhealth snacks` で image がOKであること
+2. Markdown: 画像記述のあるmdを開き、その行にカーソル → フロートで画像表示
+3. oil: `-` でディレクトリを開き、画像ファイル上で `<C-p>` → フロートに画像表示
+4. telescope: `<leader>ff` で画像ファイルを選択 → プレビューに画像表示
+5. `:e 画像ファイル` → 従来どおりOS既定アプリで開く
