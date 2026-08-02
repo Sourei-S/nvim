@@ -29,19 +29,18 @@ return {
   opts = {},
   config = function(_, opts)
     local telescope = require("telescope")
-    -- 画像ファイルはsnacks.imageでプレビューし、それ以外は従来のプレビューを使う
-    local image_exts = { png = true, jpg = true, jpeg = true, gif = true, bmp = true, webp = true }
+    -- 画像ファイルはsnacks.imageでプレビューし、それ以外は従来のプレビューを使う。
+    -- 拡張子の固定リストで判定すると一覧の三重管理(open-external/oil/telescope)で
+    -- ズレが生じるため、snacksが描画できる形式かをsnacks自身に問い合わせて判定する
     local default_maker = require("telescope.previewers").buffer_previewer_maker
-    opts.defaults = {
-      buffer_previewer_maker = function(filepath, bufnr, maker_opts)
-        local ext = vim.fn.fnamemodify(filepath, ":e"):lower()
-        if image_exts[ext] then
-          require("snacks.image.buf").attach(bufnr, { src = filepath })
-        else
-          default_maker(filepath, bufnr, maker_opts)
-        end
-      end,
-    }
+    opts.defaults = opts.defaults or {}
+    opts.defaults.buffer_previewer_maker = function(filepath, bufnr, maker_opts)
+      if require("snacks.image").supports_file(filepath) then
+        require("snacks.image.buf").attach(bufnr, { src = filepath })
+      else
+        default_maker(filepath, bufnr, maker_opts)
+      end
+    end
     opts.extensions = {
       ["ui-select"] = require("telescope.themes").get_dropdown(),
     }

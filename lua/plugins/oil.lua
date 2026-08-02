@@ -30,15 +30,14 @@ return {
           local oil = require("oil")
           local entry = oil.get_cursor_entry()
           local dir = oil.get_current_dir()
-          -- open-external.luaが外部アプリで開いてしまう画像拡張子は
-          -- フロート+snacks.imageでプレビューする(それ以外は標準プレビュー)
-          local image_exts = {
-            png = true, jpg = true, jpeg = true, gif = true, bmp = true,
-            webp = true, tif = true, tiff = true, heic = true, avif = true,
-          }
-          local ext = entry and entry.type == "file" and entry.name:match("%.([^.]+)$")
-          if dir and ext and image_exts[ext:lower()] then
-            require("config.oil-image-preview").toggle(dir .. entry.name)
+          -- 拡張子の固定リストで判定すると一覧の三重管理(open-external/oil/telescope)で
+          -- ズレが生じるため、snacks自身に「描画できる形式か」を問い合わせて判定する。
+          -- 対応形式(png/jpg/jpeg/gif/bmp/webp/tiff/heic/avif等)はフロート+snacks.imageで
+          -- プレビューし、非対応(.ico・.tif含む)は標準プレビューに委譲する
+          -- (open-external.luaのBufReadCmdが働きOS既定アプリで開かれる)
+          local path = dir and entry and entry.type == "file" and dir .. entry.name
+          if path and require("snacks.image").supports_file(path) then
+            require("config.oil-image-preview").toggle(path)
           else
             require("oil.actions").preview.callback()
           end

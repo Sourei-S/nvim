@@ -22,6 +22,8 @@ function M.toggle(path)
     return
   end
   local buf = vim.api.nvim_create_buf(false, true)
+  -- ウィンドウを閉じた時にスクラッチバッファも破棄し、孤児バッファの蓄積を防ぐ
+  vim.bo[buf].bufhidden = "wipe"
   state.win = vim.api.nvim_open_win(buf, false, {
     relative = "cursor",
     row = 1,
