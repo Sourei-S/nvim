@@ -1,6 +1,8 @@
 -- 画像プレビュー(snacks.nvimのimageモジュールのみ使用)
 -- WezTermはunicode placeholders未対応のため、Markdown内の画像は
 -- カーソルを乗せたときのフロート表示になる(kitty/ghosttyなら自動でインライン表示)
+-- 注: 画像ファイルの直接:editは既存のopen-external.lua(OS既定アプリで開く)が担当する。
+-- snacksはoil/telescopeのプレビューとMarkdownフロートに使う
 return {
   "folke/snacks.nvim",
   priority = 1000,
