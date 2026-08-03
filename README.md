@@ -174,6 +174,10 @@ M.templates = {
 WezTerm上でnvim内に画像を表示する。ImageMagickが必要（`sudo apt-get install imagemagick`）。
 画像を`:e`で直接開いた場合は従来どおりOS既定アプリで開く（open-external.lua）。
 
+WSL2ではsnacksの既定動作が2点機能しないため、`lua/config/snacks-image-wsl.lua` で補正している
+（Windows側のWezTermはWSL内のファイルパスを読めないので画像データを直接転送に切り替え、
+WSLのptyが返すセルのピクセル寸法0を既定値9x18で補ってフロート寸法の計算崩れを防ぐ）。
+
 - **Markdown**: `![](path.png)` の行にカーソルを乗せるとフロートで画像を表示
   （WezTermはunicode placeholders未対応のためインライン埋め込みは不可。kitty/ghosttyなら自動でインライン表示になる）
 - **oilの`<C-p>`**: カーソル下がsnacks対応形式の画像ならフロートで表示（もう一度押すと閉じる）。

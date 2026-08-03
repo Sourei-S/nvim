@@ -32,4 +32,9 @@ return {
     statuscolumn = { enabled = false },
     words = { enabled = false },
   },
+  config = function(_, opts)
+    require("snacks").setup(opts)
+    -- WSL2ではWindows側ターミナルへのパス参照転送とセル寸法取得が機能しないため補正する
+    require("config.snacks-image-wsl").setup()
+  end,
 }
