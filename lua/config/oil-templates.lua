@@ -5,13 +5,21 @@ local M = {}
 
 M.templates = {
   {
-    name = "agentプロジェクト構成",
+    name = "プロジェクト",
     lines = {
       ".agents/",
       ".claude/",
       ".codex/",
       "docs/",
       ".gitignore",
+    },
+  },
+  {
+    name = "課フォルダ",
+    lines = {
+      "制作一課/",
+      "制作二課/",
+      "企画制作課/",
     },
   },
 }
