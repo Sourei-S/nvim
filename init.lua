@@ -75,6 +75,9 @@ require("config.lazy")
 -- Office・PDF・画像などnvimで扱えないファイルをOS既定のアプリで開く
 require("config.open-external")
 
+-- HTMLをlive-serverでブラウザにライブプレビューする(<leader>mp)
+require("config.html-preview")
+
 -- 背景を透過にする(カラースキーム適用後にも維持されるようautocmdで設定)
 local function set_transparent_bg()
   local groups = {
