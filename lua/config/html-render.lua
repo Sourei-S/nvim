@@ -75,7 +75,7 @@ function M.toggle()
   vim.keymap.set("n", "q", M.close, { buffer = buf, desc = "プレビューを閉じる" })
   vim.keymap.set("n", "<Esc>", M.close, { buffer = buf, desc = "プレビューを閉じる" })
   -- フロート表示中に<leader>mrを再度押しても閉じられるようにする(フォーカスがフロートに移るため)
-  vim.keymap.set("n", "<leader>mr", M.toggle, { buffer = buf, desc = "プレビューを閉じる" })
+  vim.keymap.set("n", "<leader>mr", M.toggle, { buffer = buf, desc = "プレビューを開閉する(表示中は閉じる)" })
 end
 
 vim.api.nvim_create_user_command("HtmlRender", function()
