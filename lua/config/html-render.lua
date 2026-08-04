@@ -23,7 +23,9 @@ function M.render(lines, cols)
   if res.code ~= 0 then
     return nil, "w3mの実行に失敗しました: " .. (res.stderr or "")
   end
-  return vim.split(res.stdout or "", "\n")
+  -- w3mの出力は末尾に改行が付くため、split結果の最後に空要素が1つ残る。
+  -- trimempty=trueで先頭・末尾の空要素だけを取り除く(中間の空行=段落間の空白行は残す)
+  return vim.split(res.stdout or "", "\n", { trimempty = true })
 end
 
 -- 開いているフロートを閉じる。閉じたらtrueを返す
@@ -40,6 +42,15 @@ end
 -- 現在のバッファをw3mで整形してフロート表示する。開いた状態で呼ぶと閉じる(トグル)
 function M.toggle()
   if M.close() then
+    return
+  end
+
+  -- :HtmlRenderはキーマップと違いfiletypeで絞られていないため、ここで弾く。
+  -- 弾かないとLuaバッファ等でも実行でき、ソースコードがそのままw3mに渡って文字化けした
+  -- 表示になってしまう。M.close()は上で済ませているので、フロート(filetype=htmlrender)側の
+  -- <leader>mr再押下による「閉じる」動作はここに到達する前に完了しており影響しない
+  if vim.bo.filetype ~= "html" then
+    vim.notify("HTMLバッファではありません", vim.log.levels.WARN)
     return
   end
 
