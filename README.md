@@ -114,6 +114,20 @@ docs/superpowers/specs/     -- 変更時の設計メモ
 | [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim) | バッファ内でマークダウンを装飾表示 |
 | [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | フローティングターミナル |
 
+HTML には同等の機能を自前実装で用意している（プラグインではなく `lua/config/` 配下）。
+
+| 機能 | 内容 |
+| --- | --- |
+| `lua/config/html-preview.lua` | live-server で配信し、ブラウザでライブプレビュー（保存すると自動リロード） |
+| `lua/config/html-render.lua` | w3m でテキスト化してフロート表示 |
+
+**前提条件**
+
+- `w3m` — `sudo apt install w3m`。未導入の場合 `<Space>mr` は案内を出して何もしない
+- `live-server` — 未導入なら `npx --yes live-server` に自動フォールバックする。初回は10秒ほどかかるため、常用するなら `npm i -g live-server` を推奨
+
+**制約** — live-server はファイル監視型のため、ブラウザへの反映は**保存時**になる。未保存の入力も反映する `markdown-preview.nvim` とは挙動が異なる。一方 `<Space>mr` の w3m 表示はバッファの内容を直接渡すため、未保存でも反映される。
+
 ## 主なキーマップ
 
 詳細(oil バッファ内の操作キー含む)は [keybindings.md](keybindings.md) を参照。
@@ -132,7 +146,7 @@ docs/superpowers/specs/     -- 変更時の設計メモ
 | `Ctrl+y` / `Ctrl+n` `Ctrl+p` / `Ctrl+Space` / `Tab` | 補完の確定 / 候補移動 / 手動表示 / スニペット内移動 (blink.cmp) |
 | `Ctrl+\` | フローティングターミナル |
 | `<Space>t` | テンプレートからファイル構成を挿入 (oil バッファ内のみ) |
-| `<Space>mp` / `<Space>mr` | ブラウザプレビュー / バッファ内装飾 (markdown) |
+| `<Space>mp` / `<Space>mr` | ブラウザプレビュー / バッファ内装飾 (markdown)、ライブプレビュー / w3m表示 (html) |
 | `jj` | インサートモードを抜ける |
 
 ## 独自スクリプト: oil テンプレート一括挿入
@@ -192,6 +206,8 @@ WSLのptyが返すセルのピクセル寸法0を既定値9x18で補ってフロ
 
 1. `:checkhealth snacks` で image がOKであること
 2. Markdown: 画像記述のあるmdを開き、その行にカーソル → フロートで画像表示
-3. oil: `-` でディレクトリを開き、画像ファイル上で `<C-p>` → フロートに画像表示
-4. telescope: `<leader>ff` で画像ファイルを選択 → プレビューに画像表示
-5. `:e 画像ファイル` → 従来どおりOS既定アプリで開く
+3. HTML: `.html` を開き `<Space>mp` → ブラウザが開く。`:w` するとブラウザが自動リロードされる
+4. HTML: `.html` を開き `<Space>mr` → w3mで整形されたフロートが開き、`q` で閉じる
+5. oil: `-` でディレクトリを開き、画像ファイル上で `<C-p>` → フロートに画像表示
+6. telescope: `<leader>ff` で画像ファイルを選択 → プレビューに画像表示
+7. `:e 画像ファイル` → 従来どおりOS既定アプリで開く
