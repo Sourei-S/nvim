@@ -2,7 +2,7 @@
 -- (markdown-preview.nvimのブラウザプレビューに相当するHTML版)
 local M = {}
 
-local state = { proc = nil, port = nil, root = nil }
+local state = { proc = nil, port = nil, root = nil, timer = nil }
 
 -- 起点ポートから順に試し、最初に空いていたポートを返す
 function M.find_port(start)
@@ -60,7 +60,8 @@ function M.open_url(url)
   end
 end
 
--- ポートがlistenを始めるまで待つ。開いたらon_ready、時間切れならon_timeoutを呼ぶ
+-- ポートがlistenを始めるまで待つ。開いたらon_ready、時間切れならon_timeoutを呼ぶ。
+-- 呼び出し側がstop()で中断できるようタイマーそのものを返す
 local function wait_until_listening(port, timeout_ms, on_ready, on_timeout)
   local timer = vim.uv.new_timer()
   local waited = 0
@@ -88,14 +89,46 @@ local function wait_until_listening(port, timeout_ms, on_ready, on_timeout)
       end
     end)
   end)
+
+  return timer
 end
+
+-- procが「今も現在進行中の起動」である場合だけcallbackを実行するようラップする。
+-- start()を呼び直す/stop()するとstate.procが入れ替わるため、
+-- 古いstart()が仕掛けたタイマーの結果が後から届いても、
+-- 別物になった現在のサーバーへ誤って干渉しないためのガード。
+-- M._stateともどもテストのために公開している内部実装で、通常の利用者は使わない
+function M._guarded(proc, callback)
+  return function(...)
+    if state.proc == proc then
+      callback(...)
+    end
+  end
+end
+M._state = state
 
 -- サーバーを停止する。停止したらtrueを返す
 function M.stop()
   local proc = state.proc
+
+  -- 起動待ちタイマーが残っていれば閉じる。M._guardedのおかげで結果自体は
+  -- 無害化されるが、閉じずに放置すると最大15秒間ポーリングし続ける無駄が残る
+  if state.timer and not state.timer:is_closing() then
+    state.timer:stop()
+    state.timer:close()
+  end
+  state.timer = nil
+
   state.proc, state.port, state.root = nil, nil, nil
   if proc then
-    proc:kill("sigterm")
+    -- npxはlive-server本体をnodeの孫プロセスとして起動するため、
+    -- 親(npx)にSIGTERMを送るだけでは孫まで届かず生き残ってしまう(実機で確認済み)。
+    -- start()でdetach=trueにしてこのprocをプロセスグループのリーダーにしてあるので、
+    -- 負のpidを指定してグループ全体にシグナルを送る。失敗時のみ個体killへ後退する
+    local ok, killed = pcall(vim.uv.kill, -proc.pid, "sigterm")
+    if not (ok and killed) then
+      proc:kill("sigterm")
+    end
     return true
   end
   return false
@@ -137,25 +170,35 @@ function M.start()
   end
 
   local errors = {}
-  state.proc = vim.system(cmd, {
+  -- detach=trueでプロセスグループのリーダーにしておく(M.stopでのグループkillに必要)
+  local proc = vim.system(cmd, {
     text = true,
+    detach = true,
     stderr = function(_, data)
       if data then
         table.insert(errors, data)
       end
     end,
   }, function() end)
+  state.proc = proc
   state.port = port
   state.root = root
 
-  -- listenする前にブラウザを開くと接続に失敗するため、開くまで待つ
-  wait_until_listening(port, 15000, function()
-    M.open_url(("http://127.0.0.1:%d/%s"):format(port, rel))
-    vim.notify(("live-serverを起動しました: http://127.0.0.1:%d (ルート: %s)"):format(port, root))
-  end, function()
-    vim.notify("live-serverの起動に失敗しました: " .. table.concat(errors), vim.log.levels.ERROR)
-    M.stop()
-  end)
+  -- listenする前にブラウザを開くと接続に失敗するため、開くまで待つ。
+  -- ここで捕まえたprocの識別情報をM._guardedに渡すことで、待っている間に
+  -- 別のstart()/stop()でstate.procが入れ替わっても、古い方が新しい方に干渉しない
+  state.timer = wait_until_listening(
+    port,
+    15000,
+    M._guarded(proc, function()
+      M.open_url(("http://127.0.0.1:%d/%s"):format(port, rel))
+      vim.notify(("live-serverを起動しました: http://127.0.0.1:%d (ルート: %s)"):format(port, root))
+    end),
+    M._guarded(proc, function()
+      vim.notify("live-serverの起動に失敗しました: " .. table.concat(errors), vim.log.levels.ERROR)
+      M.stop()
+    end)
+  )
 end
 
 -- 起動中なら停止、停止中なら起動する
