@@ -2,7 +2,7 @@
 -- (markdown-preview.nvimのブラウザプレビューに相当するHTML版)
 local M = {}
 
-local state = { proc = nil, port = nil, root = nil, timer = nil }
+local state = { proc = nil, port = nil, root = nil, cancel_wait = nil }
 
 -- 起点ポートから順に試し、最初に空いていたポートを返す
 function M.find_port(start)
@@ -61,8 +61,11 @@ function M.open_url(url)
 end
 
 -- ポートがlistenを始めるまで待つ。開いたらon_ready、時間切れならon_timeoutを呼ぶ。
--- 呼び出し側がstop()で中断できるようタイマーそのものを返す
-local function wait_until_listening(port, timeout_ms, on_ready, on_timeout)
+-- 呼び出し側が待機を打ち切れるようcancel()を返す。
+-- タイマーのstop/closeは内部のfinished一つで管理し、finish()とcancel()の
+-- どちらから来ても一度しか実行されないようにしてある(cancel()は何度呼んでも安全)。
+-- 実サーバーを使わずにcancelの冪等性をテストできるようM._wait_until_listeningとして公開している
+function M._wait_until_listening(port, timeout_ms, on_ready, on_timeout)
   local timer = vim.uv.new_timer()
   local waited = 0
   local finished = false
@@ -74,7 +77,9 @@ local function wait_until_listening(port, timeout_ms, on_ready, on_timeout)
     finished = true
     timer:stop()
     timer:close()
-    vim.schedule(callback)
+    if callback then
+      vim.schedule(callback)
+    end
   end
 
   timer:start(200, 200, function()
@@ -90,14 +95,16 @@ local function wait_until_listening(port, timeout_ms, on_ready, on_timeout)
     end)
   end)
 
-  return timer
+  return function()
+    finish(nil)
+  end
 end
 
 -- procが「今も現在進行中の起動」である場合だけcallbackを実行するようラップする。
 -- start()を呼び直す/stop()するとstate.procが入れ替わるため、
 -- 古いstart()が仕掛けたタイマーの結果が後から届いても、
 -- 別物になった現在のサーバーへ誤って干渉しないためのガード。
--- M._stateともどもテストのために公開している内部実装で、通常の利用者は使わない
+-- 純粋な関数なのでM.open_url同様、テストのためにも公開している
 function M._guarded(proc, callback)
   return function(...)
     if state.proc == proc then
@@ -105,19 +112,28 @@ function M._guarded(proc, callback)
     end
   end
 end
-M._state = state
+
+-- テスト専用: 実際にstart()を経由せずstate.procだけを差し替える。
+-- state自体は非公開のままにして、kill/タイマー解除の不変条件を外から壊せないようにする
+function M._set_proc_for_test(proc)
+  state.proc = proc
+end
+
+-- テスト専用: 実際にstart()を経由せずstate.cancel_waitだけを差し替える
+function M._set_cancel_wait_for_test(cancel)
+  state.cancel_wait = cancel
+end
 
 -- サーバーを停止する。停止したらtrueを返す
 function M.stop()
   local proc = state.proc
 
-  -- 起動待ちタイマーが残っていれば閉じる。M._guardedのおかげで結果自体は
-  -- 無害化されるが、閉じずに放置すると最大15秒間ポーリングし続ける無駄が残る
-  if state.timer and not state.timer:is_closing() then
-    state.timer:stop()
-    state.timer:close()
+  -- 起動待ちがあれば打ち切る。M._guardedのおかげで結果自体は無害化されるが、
+  -- 打ち切らずに放置すると最大15秒間ポーリングし続ける無駄が残る
+  if state.cancel_wait then
+    state.cancel_wait()
+    state.cancel_wait = nil
   end
-  state.timer = nil
 
   state.proc, state.port, state.root = nil, nil, nil
   if proc then
@@ -187,7 +203,7 @@ function M.start()
   -- listenする前にブラウザを開くと接続に失敗するため、開くまで待つ。
   -- ここで捕まえたprocの識別情報をM._guardedに渡すことで、待っている間に
   -- 別のstart()/stop()でstate.procが入れ替わっても、古い方が新しい方に干渉しない
-  state.timer = wait_until_listening(
+  state.cancel_wait = M._wait_until_listening(
     port,
     15000,
     M._guarded(proc, function()
