@@ -75,6 +75,9 @@ require("config.lazy")
 -- Office・PDF・画像などnvimで扱えないファイルをOS既定のアプリで開く
 require("config.open-external")
 
+-- HTMLをw3mで整形してフロート表示する(<leader>mr)
+require("config.html-render")
+
 -- HTMLをlive-serverでブラウザにライブプレビューする(<leader>mp)
 require("config.html-preview")
 
