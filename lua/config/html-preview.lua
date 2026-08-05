@@ -233,8 +233,12 @@ function M.start()
           state.cancel_wait()
           state.cancel_wait = nil
         end
+        -- シグナルで殺された場合、libuvはcodeを0にしてsignalへ番号を入れる。
+        -- codeだけを出すと「exit code=0」となって外部killが正常終了に見えてしまう
+        local cause = (res.signal and res.signal ~= 0) and ("signal=%d"):format(res.signal)
+          or ("exit code=%d"):format(res.code)
         vim.notify(
-          ("live-serverが終了しました(exit code=%d): %s"):format(res.code, table.concat(errors)),
+          ("live-serverが終了しました(%s): %s"):format(cause, table.concat(errors)),
           vim.log.levels.ERROR
         )
       end)()

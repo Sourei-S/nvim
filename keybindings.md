@@ -19,7 +19,7 @@
 | `jj` | Insert | ノーマルモードに戻る | `init.lua` |
 | `<Space>mp` | Normal (markdownのみ) | マークダウンプレビューをブラウザで開閉 | `lua/plugins/markdown-preview.lua` |
 | `<Space>mr` | Normal (markdownのみ) | バッファ内のマークダウン装飾表示を切り替え | `lua/plugins/render-markdown.lua` |
-| `<Space>mp` | Normal (htmlのみ) | HTMLのライブプレビューをブラウザで開閉 | `lua/config/html-preview.lua` |
+| `<Space>mp` | Normal (htmlのみ) | HTMLのライブプレビューを開始(同じファイルで再度押すと停止。別ファイルではそちらに切り替え) | `lua/config/html-preview.lua` |
 | `<Space>mr` | Normal (htmlのみ) | HTMLをw3mで整形してフロート表示 | `lua/config/html-render.lua` |
 | `<Space>gg` | Normal | LazyGit を開く | `lua/plugins/lazygit.lua` |
 | `<Space>t` | Normal (oilバッファのみ) | テンプレートからファイル構成を挿入(選択後 :w で一括作成) | `lua/plugins/oil.lua` |
@@ -93,7 +93,7 @@ oil のバッファにフォーカスがある状態で使えるキーです。`
 | `:RenderMarkdown toggle` | バッファ内のマークダウン装飾表示を切り替え |
 | `:HtmlPreview` | HTMLのライブプレビューを開始(起動中はブラウザを開き直す) |
 | `:HtmlPreviewStop` | HTMLのライブプレビューを停止 |
-| `:HtmlPreviewToggle` | HTMLのライブプレビューを開閉 |
+| `:HtmlPreviewToggle` | HTMLのライブプレビューを開始(プレビュー中のファイル自身で実行したときだけ停止) |
 | `:HtmlRender` | HTMLをw3mで整形してフロート表示 |
 | `:LazyGit` | LazyGit を開く |
 | `:ToggleTerm` | フローティングターミナルを開閉 |
