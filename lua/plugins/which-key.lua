@@ -7,6 +7,7 @@ return {
       -- プレフィックスキーのグループ名
       { "<leader>f", group = "検索(Telescope)" },
       { "<leader>g", group = "Git" },
+      { "<leader>m", group = "プレビュー" },
     },
   },
 }
